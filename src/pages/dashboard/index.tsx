@@ -1,5 +1,5 @@
 import { GetServerSideProps } from "next";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useState, useEffect } from "react";
 import styles from "./styles.module.css";
 import Head from "next/head";
 
@@ -8,14 +8,21 @@ import { Textarea } from "../../components/textarea";
 import { FiShare2 } from "react-icons/fi";
 import { FaTrash } from "react-icons/fa";
 
-import { db } from "@/services/firebaseConnection";
+import { db } from "../../services/firebaseConnection";
 
-import { addDoc, collection, query, orderBy, where, onSnapshot } from "firebase/firestore";
+import {
+    addDoc,
+    collection,
+    query,
+    orderBy,
+    where,
+    onSnapshot,
+} from "firebase/firestore";
 
 interface HomeProps {
     user: {
         email: string;
-    }
+    };
 }
 
 interface TaskProps {
@@ -27,19 +34,18 @@ interface TaskProps {
 }
 
 export default function Dashboard({ user }: HomeProps) {
-
-    const [input, setInput] = useState("")
-    const [publicTask, setPublicTask] = useState(false)
-    const [tasks, setTasks] = useState<TaskProps[]>([])
+    const [input, setInput] = useState("");
+    const [publicTask, setPublicTask] = useState(false);
+    const [tasks, setTasks] = useState<TaskProps[]>([]);
 
     useEffect(() => {
         async function loadTarefas() {
-            const tarefasRef = collection(db, "terefas")
+            const tarefasRef = collection(db, "tarefas");
             const q = query(
                 tarefasRef,
-                orderBy("creted", "desc"),
+                orderBy("created", "desc"),
                 where("user", "==", user?.email)
-            )
+            );
 
             onSnapshot(q, (snapshot) => {
                 let lista = [] as TaskProps[];
@@ -50,8 +56,8 @@ export default function Dashboard({ user }: HomeProps) {
                         tarefa: doc.data().tarefa,
                         created: doc.data().created,
                         user: doc.data().user,
-                        public: doc.data().public
-                    })
+                        public: doc.data().public,
+                    });
                 });
 
                 setTasks(lista);
@@ -62,7 +68,6 @@ export default function Dashboard({ user }: HomeProps) {
     }, [user?.email]);
 
     function handleChangePublic(event: ChangeEvent<HTMLInputElement>) {
-
         setPublicTask(event.target.checked);
     }
 
@@ -79,15 +84,12 @@ export default function Dashboard({ user }: HomeProps) {
                 public: publicTask,
             });
 
-            setInput("")
+            setInput("");
             setPublicTask(false);
-
-        } catch (error) {
-            console.log(error)
+        } catch (err) {
+            console.log(err);
         }
-
     }
-
 
     return (
         <div className={styles.container}>
@@ -105,14 +107,16 @@ export default function Dashboard({ user }: HomeProps) {
                                 placeholder="Digite qual sua tarefa..."
                                 value={input}
                                 onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
-                                    setInput(event.target.value)}
+                                    setInput(event.target.value)
+                                }
                             />
                             <div className={styles.checkboxArea}>
                                 <input
                                     type="checkbox"
                                     className={styles.checkbox}
                                     checked={publicTask}
-                                    onChange={handleChangePublic} />
+                                    onChange={handleChangePublic}
+                                />
                                 <label>Deixar tarefa publica?</label>
                             </div>
 
@@ -169,7 +173,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
         props: {
             user: {
                 email: session?.user?.email,
-            }
+            },
         },
     };
 };
